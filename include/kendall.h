@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 using std::sqrt;
 using std::pair;
@@ -23,7 +24,7 @@ double kendallCorrelation(vector<double>& x, vector<double>& y)
   //make array of pairs and sort by X (and Y if X have ties)
   vector<pair<double, double>> pairs;
   pairs.reserve(x.size());
-  for(unsigned long i = 0; i < x.size(); i++)
+  for(unsigned long long i = 0; i < x.size(); i++)
     pairs.emplace_back(make_pair(x[i], y[i]));
   std::sort(pairs.begin(), pairs.end(), 
       [](const pair<double, double>& p1, const pair<double, double>& p2)
@@ -35,12 +36,12 @@ double kendallCorrelation(vector<double>& x, vector<double>& y)
   
 
   //pass the vector and count pairs having same X or same X and Y
-  unsigned long sameX = 0;//total pairs with same X
-  unsigned long sameXY = 0;//total pairs with same XY
-  unsigned long consecutiveSameX = 1;//current streak of pairs with same X
-  unsigned long consecutiveSameXY = 1;//current streak of pairs with same XY
+  unsigned long long sameX = 0;//total pairs with same X
+  unsigned long long sameXY = 0;//total pairs with same XY
+  unsigned long long consecutiveSameX = 1;//current streak of pairs with same X
+  unsigned long long consecutiveSameXY = 1;//current streak of pairs with same XY
 
-  for(unsigned long i = 1; i < pairs.size(); i++)
+  for(unsigned long long i = 1; i < pairs.size(); i++)
   {
     //if same X increment the current same X streak
     if(pairs[i].first == pairs[i-1].first)
@@ -77,11 +78,12 @@ double kendallCorrelation(vector<double>& x, vector<double>& y)
   sameX += (consecutiveSameX * (consecutiveSameX - 1)) / 2;
   sameXY += (consecutiveSameXY * (consecutiveSameXY -1)) / 2;
 
+
   /* sort the pairs by Y and get the number of swaps neeeded
    * to sort them by Y, since they were previously sorted
    * by X this will tell us the number of discording pairs
    */
-  unsigned long discording = 0;
+  unsigned long long discording = 0;
   vector<pair<double, double>> holder(pairs.size());
   /*
   non recursive merge sort
@@ -89,20 +91,19 @@ double kendallCorrelation(vector<double>& x, vector<double>& y)
   */
   for(unsigned long chunk = 1; chunk < pairs.size(); chunk *= 2)
   {
-      //take 2 sorted chunks and make them unsigned longo one sorted chunk 
+      //take 2 sorted chunks and make them one sorted chunk 
       for(unsigned long startChunk = 0; startChunk < pairs.size(); startChunk += 2 * chunk)
       {
           //start and end of the left half
           unsigned long startLeft = startChunk;
           unsigned long endLeft = min(startLeft + chunk, pairs.size());
           
-
           //start and end of the right half
           unsigned long startRight = endLeft;
           unsigned long endRight = min(startRight + chunk, pairs.size());
           
           //merge the 2 halfs
-          //index is used to pounsigned long to the right place in the holder array
+          //index is used to point to the right place in the holder array
           unsigned long index = startLeft;
           for(;startLeft < endLeft && startRight < endRight; index++)
           {
@@ -146,22 +147,22 @@ double kendallCorrelation(vector<double>& x, vector<double>& y)
     
 
  //pass the vector and count pairs having same Y
- unsigned long sameY = 0;//counter
- unsigned long consecutiveSameY = 1;//current streak
- for(unsigned long i = 1; i < pairs.size(); i++)
+ unsigned long long sameY = 0;//counter
+ unsigned long long consecutiveSameY = 1;//current streak
+ for(unsigned long long i = 1; i < pairs.size(); i++)
  {
    if(pairs[i].second == pairs[i-1].second)
      consecutiveSameY++;
    else
    {
-     sameY += (consecutiveSameY * (consecutiveSameY - 1)) / 2;
+     sameY += (consecutiveSameY * (consecutiveSameY - 1ull)) / 2ull;
      consecutiveSameY = 1;
    }
  } 
- sameY += (consecutiveSameY * (consecutiveSameY - 1)) / 2;
+ sameY += (consecutiveSameY * (consecutiveSameY - 1ull)) / 2ull;
 
  //return the correlation
- unsigned long totalPairs = ((pairs.size() * (pairs.size() - 1)) / 2);
+ unsigned long long totalPairs = ((pairs.size() * (pairs.size() - 1ull)) / 2ull);
  /*
   * concordant pairs - discorant pairs, having the sameX or sameY count
   * as a discording pair because the other value (Y or X) could be different, 
@@ -169,12 +170,12 @@ double kendallCorrelation(vector<double>& x, vector<double>& y)
   * sameXY is added back, the rest of the discording pairs has been calculated
   * during the merge sort ( - discording)
   * */
- long long num = totalPairs - sameX - sameY + sameXY - 2 * discording;
+ long long num = totalPairs - sameX - sameY + sameXY - 2ull * discording;
  /*
   * squart root of 
   * (pairs not tied in X) * (pairs not tied in Y)
   * */
- double den = sqrt((totalPairs - sameX) * (totalPairs - sameY));
+ long double den = sqrt((long double)(totalPairs - sameX) * (totalPairs - sameY));
  return (den == 0.0)? (sameX == sameY? 1.0 : 0.0) : num/den;
 }
 #endif
