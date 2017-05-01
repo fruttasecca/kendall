@@ -4,101 +4,11 @@
 #include <vector>
 #include <algorithm>
 
-using namespace std;
-
-/**
- * @brief Given 2 pairs return true if the first comes before
- * the second in an order based on pair.first, pair.second.
- *
- * @param p1 First pair.
- * @param p2 Second pair.
- *
- * @return True if the first pair comes before the second.
- */
-static bool xSorting(pair<double, double>& p1, pair<double, double>& p2)
-{
-  //note: p1.second < p2.second instead of p1.seacon <= p2.second is used
-  //because std::sort requires strict weak ordering
-  return (p1.first == p2.first ? p1.second < p2.second : p1.first < p2.first);
-}
-
-/**
- * @brief Returns the number of discording pairs, starting from the vector
- * of pairs ordered by feature X perform a merge sort which keeps track of
- * how many times the order by Y differs from the order by X.
- *
- * @param pairs Vector of pairs ordered by X.
- *
- * @return Number of discording pairs, 2 pairs p1 and p2 discord if they would be
- * ordered differently (relative to each other) when ordered by X and when ordered 
- * by Y.
- */
-static unsigned long getDiscording(vector<pair<double, double>>& pairs)
-{
-   unsigned long discording = 0;
-
-   vector<pair<double, double>> holder(pairs.size());
-   /*
-   non recursive merge sort
-   start from chunks of size 1 to n, merge (and count swaps)
-   */
-   for(unsigned long chunk = 1; chunk < pairs.size(); chunk *= 2)
-   {
-       //take 2 sorted chunks and make them unsigned longo one sorted chunk 
-       for(unsigned long startChunk = 0; startChunk < pairs.size(); startChunk += 2 * chunk)
-       {
-           //start and end of the left half
-           unsigned long startLeft = startChunk;
-           unsigned long endLeft = min(startLeft + chunk, pairs.size());
-           
-           //start and end of the right half
-           unsigned long startRight = endLeft;
-           unsigned long endRight = min(startRight + chunk, pairs.size());
-           
-           //merge the 2 halfs
-           //index is used to pounsigned long to the right place in the holder array
-           unsigned long index = startLeft;
-           for(;startLeft < endLeft && startRight < endRight; index++)
-           {
-               /*
-               if the pairs (ordered by X) discord when checked by Y
-               increment the number of discording pairs by 1 for each
-               remaining pair on the left half, because if the pair on the right
-               half discords with the pair on the left half it surely discords
-               with all the remaining pairs on the left half, since they all
-               have a Y greater than the Y of the left half pair currently
-               being checked
-               */
-               if(pairs[startLeft].second > pairs[startRight].second)
-               {
-                   holder[index] = pairs[startRight];
-                   startRight++;
-                   discording += endLeft - startLeft;
-               }
-               else
-               {
-                   holder[index] = pairs[startLeft];
-                   startLeft++;
-               }
-           }
-           
-           /*
-           if the left half is over there are no more discording pairs in this
-           chunk, the remaining pairs in the right half can be copied
-           */
-           for(;startRight < endRight; startRight++, index++)
-               holder[index] = pairs[startRight];
-           /*
-           if the right half is over (and the left one is not) all the
-           discording pairs have been accounted for already
-           */
-           for(;startLeft < endLeft; startLeft++, index++)
-               holder[index] = pairs[startLeft];
-       }
-       pairs.swap(holder);
-   }
-   return discording;
-}
+using std::sqrt;
+using std::pair;
+using std::vector;
+using std::min;
+using std::make_pair;
 
 /**
  * @brief Calculates the kendal correlation accounting for ties.
@@ -115,7 +25,14 @@ double kendallCorrelation(vector<double>& x, vector<double>& y)
   pairs.reserve(x.size());
   for(unsigned long i = 0; i < x.size(); i++)
     pairs.emplace_back(make_pair(x[i], y[i]));
-  std::sort(pairs.begin(), pairs.end(), xSorting);
+  std::sort(pairs.begin(), pairs.end(), 
+      [](const pair<double, double>& p1, const pair<double, double>& p2)
+      {
+        //note: p1.second < p2.second instead of p1.second <= p2.second is used
+        //because std::sort requires strict weak ordering
+        return (p1.first == p2.first ? p1.second < p2.second : p1.first < p2.first);
+      });
+  
 
   //pass the vector and count pairs having same X or same X and Y
   unsigned long sameX = 0;//total pairs with same X
@@ -164,38 +81,100 @@ double kendallCorrelation(vector<double>& x, vector<double>& y)
    * to sort them by Y, since they were previously sorted
    * by X this will tell us the number of discording pairs
    */
-  unsigned long discording = getDiscording(pairs);
-
-  //pass the vector and count pairs having same Y
-  unsigned long sameY = 0;//counter
-  unsigned long consecutiveSameY = 1;//current streak
-  for(unsigned long i = 1; i < pairs.size(); i++)
+  unsigned long discording = 0;
+  vector<pair<double, double>> holder(pairs.size());
+  /*
+  non recursive merge sort
+  start from chunks of size 1 to n, merge (and count swaps)
+  */
+  for(unsigned long chunk = 1; chunk < pairs.size(); chunk *= 2)
   {
-    if(pairs[i].second == pairs[i-1].second)
-      consecutiveSameY++;
-    else
-    {
-      sameY += (consecutiveSameY * (consecutiveSameY - 1)) / 2;
-      consecutiveSameY = 1;
-    }
-  } 
-  sameY += (consecutiveSameY * (consecutiveSameY - 1)) / 2;
+      //take 2 sorted chunks and make them unsigned longo one sorted chunk 
+      for(unsigned long startChunk = 0; startChunk < pairs.size(); startChunk += 2 * chunk)
+      {
+          //start and end of the left half
+          unsigned long startLeft = startChunk;
+          unsigned long endLeft = min(startLeft + chunk, pairs.size());
+          
 
-  //return the correlation
-  unsigned long totalPairs = ((pairs.size() * (pairs.size() - 1)) / 2);
-  /*
-   * concordant pairs - discorant pairs, having the sameX or sameY count
-   * as a discording pair because the other value (Y or X) could be different, 
-   * to account for the fact that pairs having the sameX might have the same Y
-   * sameXY is added back, the rest of the discording pairs has been calculated
-   * during the merge sort ( - discording)
-   * */
-  long long num = totalPairs - sameX - sameY + sameXY - 2 * discording;
-  /*
-   * squart root of 
-   * (pairs not tied in X) * (pairs not tied in Y)
-   * */
-  double den = sqrt((totalPairs - sameX) * (totalPairs - sameY));
-  return (den == 0.0)? (sameX == sameY? 1.0 : 0.0) : num/den;
+          //start and end of the right half
+          unsigned long startRight = endLeft;
+          unsigned long endRight = min(startRight + chunk, pairs.size());
+          
+          //merge the 2 halfs
+          //index is used to pounsigned long to the right place in the holder array
+          unsigned long index = startLeft;
+          for(;startLeft < endLeft && startRight < endRight; index++)
+          {
+              /*
+              if the pairs (ordered by X) discord when checked by Y
+              increment the number of discording pairs by 1 for each
+              remaining pair on the left half, because if the pair on the right
+              half discords with the pair on the left half it surely discords
+              with all the remaining pairs on the left half, since they all
+              have a Y greater than the Y of the left half pair currently
+              being checked
+              */
+              if(pairs[startLeft].second > pairs[startRight].second)
+              {
+                  holder[index] = pairs[startRight];
+                  startRight++;
+                  discording += endLeft - startLeft;
+              }
+              else
+              {
+                  holder[index] = pairs[startLeft];
+                  startLeft++;
+              }
+          }
+          
+          /*
+          if the left half is over there are no more discording pairs in this
+          chunk, the remaining pairs in the right half can be copied
+          */
+          for(;startRight < endRight; startRight++, index++)
+              holder[index] = pairs[startRight];
+          /*
+          if the right half is over (and the left one is not) all the
+          discording pairs have been accounted for already
+          */
+          for(;startLeft < endLeft; startLeft++, index++)
+              holder[index] = pairs[startLeft];
+      }
+      pairs.swap(holder);
+ }
+    
+
+ //pass the vector and count pairs having same Y
+ unsigned long sameY = 0;//counter
+ unsigned long consecutiveSameY = 1;//current streak
+ for(unsigned long i = 1; i < pairs.size(); i++)
+ {
+   if(pairs[i].second == pairs[i-1].second)
+     consecutiveSameY++;
+   else
+   {
+     sameY += (consecutiveSameY * (consecutiveSameY - 1)) / 2;
+     consecutiveSameY = 1;
+   }
+ } 
+ sameY += (consecutiveSameY * (consecutiveSameY - 1)) / 2;
+
+ //return the correlation
+ unsigned long totalPairs = ((pairs.size() * (pairs.size() - 1)) / 2);
+ /*
+  * concordant pairs - discorant pairs, having the sameX or sameY count
+  * as a discording pair because the other value (Y or X) could be different, 
+  * to account for the fact that pairs having the sameX might have the same Y
+  * sameXY is added back, the rest of the discording pairs has been calculated
+  * during the merge sort ( - discording)
+  * */
+ long long num = totalPairs - sameX - sameY + sameXY - 2 * discording;
+ /*
+  * squart root of 
+  * (pairs not tied in X) * (pairs not tied in Y)
+  * */
+ double den = sqrt((totalPairs - sameX) * (totalPairs - sameY));
+ return (den == 0.0)? (sameX == sameY? 1.0 : 0.0) : num/den;
 }
 #endif
