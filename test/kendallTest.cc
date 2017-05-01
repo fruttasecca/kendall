@@ -6,6 +6,9 @@
 
 using namespace std;
 
+//acceptable difference due to rounding errors
+double abs_error = 1e-8;
+
 /**
  * @brief Expected result of the algorithm given the number of pairs, number
  * of pairs with tied X, number of pairs with tied Y and number of identical
@@ -57,7 +60,7 @@ TEST(testWithElements, test1Element)
   vector<double> x,y;
   x.push_back(1.);
   y.push_back(1.);
-  EXPECT_EQ(kendallCorrelation(x, y), 1.0);
+  EXPECT_NEAR(kendallCorrelation(x, y), 1.0, abs_error);
 }
 
 TEST(testNoTies, testNoTiesFullyConcordant)
@@ -72,7 +75,7 @@ TEST(testNoTies, testNoTiesFullyConcordant)
           x.push_back(i);
           y.push_back(i);
       }
-      EXPECT_EQ(1.0, kendallCorrelation(x, y));
+      EXPECT_NEAR(1.0, kendallCorrelation(x, y), abs_error);
   }
 }
 
@@ -89,7 +92,8 @@ TEST(testNoTies, testNoTiesFullyDiscordant)
           x.push_back(n-i);
           y.push_back(i);
       }
-      EXPECT_EQ(-1.0, kendallCorrelation(x, y));
+      EXPECT_NEAR(-1.0, kendallCorrelation(x, y), abs_error);
+;
   }
 }
     
@@ -106,7 +110,7 @@ TEST(testNoTies, testNoTies0Correlation)
   y.push_back(0.8);
   y.push_back(0.7);
 
-  EXPECT_EQ(0., kendallCorrelation(x, y));
+  EXPECT_NEAR(0., kendallCorrelation(x, y), abs_error);
 }
     
 TEST(testNoTies, testNoTiesPositiveCorrelation)
@@ -122,7 +126,7 @@ TEST(testNoTies, testNoTiesPositiveCorrelation)
   y.push_back(0.8);
   y.push_back(0.9);
 
-  EXPECT_EQ(2./6., kendallCorrelation(x, y));
+  EXPECT_NEAR(2./6., kendallCorrelation(x, y), abs_error);
 }
 
 TEST(testNoTies, testNoTiesNegativeCorrelation)
@@ -138,7 +142,7 @@ TEST(testNoTies, testNoTiesNegativeCorrelation)
   y.push_back(0.8);
   y.push_back(-0.5);
 
-  EXPECT_EQ(-2./6., kendallCorrelation(x, y));
+  EXPECT_NEAR(-2./6., kendallCorrelation(x, y), abs_error);
 }
 
 TEST(testNoTies, testShuffledNoTies)
@@ -159,7 +163,7 @@ TEST(testNoTies, testShuffledNoTies)
       shuffle(x.begin(), x.end(), g);
       shuffle(y.begin(), y.end(), g);
 
-      EXPECT_EQ(lazyMethod(x, y), kendallCorrelation(x, y));
+      EXPECT_NEAR(lazyMethod(x, y), kendallCorrelation(x, y), abs_error);
   }
 }
 
@@ -175,7 +179,7 @@ TEST(testWithTies, testSameX)
           x.push_back(0.);
           y.push_back(i);
       }
-      EXPECT_EQ(0., kendallCorrelation(x, y));
+      EXPECT_NEAR(0., kendallCorrelation(x, y), abs_error);
   }
 }
 
@@ -191,7 +195,7 @@ TEST(testWithTies, testSameY)
         x.push_back(i);
         y.push_back(0.);
     }
-    EXPECT_EQ(0., kendallCorrelation(x, y));
+    EXPECT_NEAR(0., kendallCorrelation(x, y), abs_error);
   }
 }
     
@@ -206,7 +210,7 @@ TEST(testWithTies, testSameXY)
           x.push_back(0.);
           y.push_back(0.);
       }
-      EXPECT_EQ(1., kendallCorrelation(x, y));
+      EXPECT_NEAR(1., kendallCorrelation(x, y), abs_error);
   }
 }
     
@@ -229,7 +233,7 @@ TEST(testWithTies, testSomeSameX)
           y.push_back(i);
       }
 
-      EXPECT_EQ(expectedResult(n, (n/2. *(n/2. - 1.)/2), 0, 0), kendallCorrelation(x, y));
+      EXPECT_NEAR(expectedResult(n, (n/2. *(n/2. - 1.)/2), 0, 0), kendallCorrelation(x, y), abs_error);
   }
 }
 
@@ -251,7 +255,7 @@ TEST(testWithTies, testSomeSameY)
           y.push_back(i);
       }
 
-      EXPECT_EQ(expectedResult(n, 0, (n/2. *(n/2. - 1.)/2), 0), kendallCorrelation(x, y));
+      EXPECT_NEAR(expectedResult(n, 0, (n/2. *(n/2. - 1.)/2), 0), kendallCorrelation(x, y), abs_error);
   }
 }
 
@@ -273,8 +277,8 @@ TEST(testWithTies, testSomeSameXY)
           y.push_back(i);
       }
 
-      EXPECT_EQ(expectedResult(n, (n/2. *(n/2. - 1.)/2),
+      EXPECT_NEAR(expectedResult(n, (n/2. *(n/2. - 1.)/2),
               (n/2. *(n/2. - 1.)/2), (n/2. *(n/2. - 1.)/2)),
-              kendallCorrelation(x, y));
+              kendallCorrelation(x, y), abs_error);
   }
 }
