@@ -40,7 +40,7 @@ template <typename T> static int sgn(T val) {
 }
 
 //O(n^2) method that doesn't include ties
-static  double lazyMethod(vector<double> x, vector<double> y)
+static  double lazyMethod(vector<double>& x, vector<double>& y)
 {
     int n = x.size();
     double totalPairs = (n * (n - 1.))/2.;
