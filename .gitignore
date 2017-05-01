@@ -40,8 +40,11 @@ CTestTestfile.cmake
 *.exe
 *.out
 *.app
+kendall
+kendallTest
 
 #vim stuff
 *~
 *.swp
 *.swo
+

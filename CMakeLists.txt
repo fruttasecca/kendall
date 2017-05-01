@@ -1,12 +1,8 @@
 cmake_minimum_required (VERSION 2.6)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 project (kendall)
-file(GLOB SOURCES
-    *.h
-    *.cc
-)
 
-add_executable(kendall ${SOURCES})
+add_executable(kendall main.cc include/kendall.h)
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 
@@ -18,10 +14,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
 execute_process(COMMAND ${CMAKE_COMMAND} --build .
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
  
-# Prevent GoogleTest from overriding our compiler/linker options
-# when building with Visual Studio
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
- 
+
 # Add googletest directly to our build. This adds
 # the following targets: gtest, gtest_main, gmock
 # and gmock_main
@@ -37,6 +30,7 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif()
  
 
-add_executable(kendallTest test/kendallTest.cc kendall.cc)
+#build test
+add_executable(kendallTest test/kendallTest.cc include/kendall.h)
 target_link_libraries(kendallTest gtest gtest_main)
 add_test(kendallTest kendallTest)
