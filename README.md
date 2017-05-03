@@ -7,7 +7,7 @@ If you want to run the tests or the extremely basic example in main:
  - cmake CMakeLists.txt
  - make (this will build the example as kendall and the tests as kendallTest)  
 
-You might need to enable c++11 to compile.
+You might need to enable c++11 to compile (and the package build-essential should probably be installed if you are using cmake).
   
 
 
