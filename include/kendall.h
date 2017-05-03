@@ -19,7 +19,7 @@ using std::make_pair;
  *
  * @return Kendall correlation [-1,1].
  */
-double kendallCorrelation(vector<double>& x, vector<double>& y)
+double kendallCorrelation(const vector<double>& x,const vector<double>& y)
 {
   //make array of pairs and sort by X (and Y if X have ties)
   vector<pair<double, double>> pairs;
